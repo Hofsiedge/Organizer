@@ -1,0 +1,55 @@
+services:
+    nginx:
+        ports:
+            - 1337:80
+    web:
+        build:
+            context:    ./src
+            dockerfile: dev.Dockerfile
+        ports:
+            - 2345:2345
+        security_opt:
+          - "seccomp:unconfined"
+        cap_add:
+          - SYS_PTRACE
+        command: --listen=:2345 --headless=true --accept-multiclient --api-version=2 exec /app
+        environment:
+            WEB_PORT: 3000
+            DATABASE_URL: postgresql://postgres:postgres@pgbouncer:6432/organizer_db
+
+
+    postgres:
+        volumes:
+            - type:   volume
+              source: postgres_dev
+              target: /var/lib/postgresql/data
+
+            - type:      bind
+              source:    ./postgres
+              target:    /source
+              read_only: true
+
+            - type:   bind
+              source: ./postgres/init.dev.sh
+              target: /docker-entrypoint-initdb.d/init.sh
+
+        environment:
+            POSTGRES_DB:        organizer_db
+            POSTGRES_USER:      postgres
+            POSTGRES_PASSWORD:  postgres
+
+    pgbouncer:
+        ports:
+            - 6432:6432
+        environment:
+            DATABASES_DBNAME:      organizer_db
+            DATABASES_USER:        postgres
+            DATABASES_PASSWORD:    postgres
+            DATABASES_HOST:        postgres
+            DATABASES_PORT:        5432
+            PGBOUNCER_LISTEN_ADDR: 0.0.0.0
+            PGBOUNCER_LISTEN_PORT: 6432
+            QUIET:                 0
+
+volumes:
+    postgres_dev:

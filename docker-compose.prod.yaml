@@ -1,0 +1,28 @@
+services:
+    nginx:
+        ports:
+            - 80:80
+    web:
+        image: organizer_web:prod-0.1
+        env_file:
+            - conf/wev.env
+    pgbouncer:
+        volumes:
+            - type:   volume
+              source: postgres_prod
+              target: /var/lib/postgresql/data
+
+            - type:      bind
+              source:    ./postgres
+              target:    /source
+              read_only: true
+
+            - type:   bind
+              source: ./postgres/init.prod.sh
+              target: /docker-entrypoint-initdb.d/init.sh
+
+        env_file:
+            - conf/pgbouncer.env
+    postgres:
+        env_file:
+            - conf/postgres.env
