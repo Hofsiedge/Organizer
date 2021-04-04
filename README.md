@@ -48,8 +48,10 @@ Operations:
 
 * Docker, Docker Compose
 * Go
-	* Fiber
+	* go-kit
+	* gorilla/mux
 	* pgx v4
+	* zap
 * PostgreSQL
 	* PL/pgSQL
 	* pgTAP
@@ -88,8 +90,7 @@ PostgreSQL can be accessed from your system through `pgbouncer` connection poole
 [ ] Basic DB
 	[ ] Task tracker
 		[ ] Task (with dependencies)
-		[ ] Resource - basically, a proxy for images, documents, etc
-	[ ] Environment
+		[ ] Resource - basically, a proxy for images, documents, etc [ ] Environment
 		[ ] Event (just as a log for now)
 		[ ] Object
 [ ] Basic REST API

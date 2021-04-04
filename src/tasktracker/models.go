@@ -1,4 +1,4 @@
-package models
+package tasktracker
 
 import "github.com/jackc/pgtype"
 

@@ -6,6 +6,8 @@ services:
         build:
             context:    ./src
             dockerfile: dev.Dockerfile
+        expose:
+            - 80
         ports:
             - 2345:2345
         security_opt:
@@ -13,6 +15,7 @@ services:
         cap_add:
           - SYS_PTRACE
         command: --listen=:2345 --headless=true --accept-multiclient --api-version=2 exec /app
+            # command: /app
         environment:
             WEB_PORT: 3000
             DATABASE_URL: postgresql://postgres:postgres@pgbouncer:6432/organizer_db

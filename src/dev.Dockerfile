@@ -16,4 +16,6 @@ RUN CGO_ENABLED=0 go build -gcflags="all=-N -l" -o /app
 FROM scratch
 COPY --from=build /go/bin/dlv /dlv
 COPY --from=build /app /app
+
 ENTRYPOINT [ "/dlv" ]
+
