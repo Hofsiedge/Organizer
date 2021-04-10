@@ -18,6 +18,7 @@ Goals:
 * Task
 * Event
 * Possibility
+* Rule (fuzzy logic)
 
 ### Tasks
 
@@ -72,14 +73,7 @@ Operations:
 
 `docker-compose exec web ash` opens `ash` terminal in `web` container
 
-PostgreSQL can be accessed from your system through `pgbouncer` connection pooler listening on port `6432`. Specify this port when using `psql` or `PgAdmin`.
-
-**TODO**
-* Compilation
-* Running tests
-	* unit
-	* mutational
-	* load
+PostgreSQL can be accessed from your system through `pgbouncer` connection pooler listening on port `6432`. Specify this port when using `psql`, `PgAdmin`, `DataGrip`, etc.
 
 ## Production environment
 

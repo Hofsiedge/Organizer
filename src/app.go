@@ -74,10 +74,19 @@ func main() {
 		transport.DecodeCreateTaskRequest,
 		transport.EncodeJSONResponse,
 	)
-
 	getTaskHandler := httptransport.NewServer(
 		transport.MakeGetTaskEndpoint(svc),
 		transport.DecodeGetTaskRequest,
+		transport.EncodeJSONResponse,
+	)
+	updateTaskHandler := httptransport.NewServer(
+		transport.MakeUpdateTaskEndpoint(svc),
+		transport.DecodeUpdateTaskRequest,
+		transport.EncodeJSONResponse,
+	)
+	deleteTaskHandler := httptransport.NewServer(
+		transport.MakeDeleteTaskEndpoint(svc),
+		transport.DecodeDeleteTaskRequest,
 		transport.EncodeJSONResponse,
 	)
 
@@ -85,6 +94,8 @@ func main() {
 
 	r.Handle("/task/", createTaskHandler).Methods("POST")
 	r.Handle("/task/{id}", getTaskHandler).Methods("GET")
+	r.Handle("/task/{id}", updateTaskHandler).Methods("PATCH")
+	r.Handle("/task/{id}", deleteTaskHandler).Methods("DELETE")
 
 	var wait time.Duration
 	flag.DurationVar(

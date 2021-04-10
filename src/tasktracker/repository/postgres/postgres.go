@@ -14,9 +14,9 @@ type TaskRepository struct {
 	Db *pgxpool.Pool
 }
 
-func (r TaskRepository) CreateTask(name string, description string, ownerId int64) (taskId int64, err error) {
+func (r TaskRepository) CreateTask(ctx context.Context, name string, description string, ownerId int64) (taskId int64, err error) {
 	row := r.Db.QueryRow(
-		context.Background(),
+		ctx,
 		"SELECT * from tasktracker.create_task($1, $2, $3);",
 		name,
 		description,
@@ -29,9 +29,9 @@ func (r TaskRepository) CreateTask(name string, description string, ownerId int6
 	return taskId, nil
 }
 
-func (r TaskRepository) GetTask(taskId int64) (task *tasktracker.Task, err error) {
+func (r TaskRepository) GetTask(ctx context.Context, taskId int64) (task *tasktracker.Task, err error) {
 	rows, err := r.Db.Query(
-		context.Background(),
+		ctx,
 		"SELECT * from tasktracker.task WHERE id = $1;",
 		taskId,
 	)
@@ -52,19 +52,25 @@ func (r TaskRepository) GetTask(taskId int64) (task *tasktracker.Task, err error
 	return task, nil
 }
 
-func (r TaskRepository) DeleteTask(taskId int64) error {
-	row := r.Db.QueryRow(
-		context.Background(),
-		"SELECT * from tasktracker.delete_task($1);",
-		taskId,
-	)
-	if err := row.Scan(); err != nil {
-		// TODO: check what happens if task not found
-		return fmt.Errorf("Query failed in DBDeleteTask: %v\n", err)
+func (r TaskRepository) UpdateTask(ctx context.Context, taskId int64, name, description *string, status *tasktracker.TaskStatus, userId int64) error {
+	if _, err := r.Db.Query(
+		ctx,
+		"CALL tasktracker.update_task($1, $2, $3, $4, $5);",
+		taskId, name, description, status, userId,
+	); err != nil {
+		return errors.WithStack(err)
 	}
 	return nil
 }
 
-func (r TaskRepository) ChangeTaskStatus(taskId int64, status tasktracker.TaskStatus) error {
-	panic("implement me")
+func (r TaskRepository) DeleteTask(ctx context.Context, taskId int64) error {
+	if _, err := r.Db.Query(
+		ctx,
+		"CALL tasktracker.delete_task($1);",
+		taskId,
+	); err != nil {
+		// TODO: handle 'task not found'
+		return errors.WithStack(err)
+	}
+	return nil
 }

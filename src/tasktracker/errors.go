@@ -5,7 +5,6 @@ type ApplicationError struct {
 	Status  int    `json:"status_code"`
 }
 
-// TODO: is this still needed?
 // implementation of go-kit's http.StatusCoder interface
 func (e *ApplicationError) StatusCode() int {
 	return e.Status
@@ -16,12 +15,19 @@ func (e *ApplicationError) Error() string {
 	return e.Message
 }
 
-var ErrTaskNotFound = &ApplicationError{
-	"Task not found",
-	404,
-}
+var (
+	ErrBadRequest = &ApplicationError{
+		Message: "Bad request",
+		Status:  400,
+	}
 
-var ErrInternalServerError = &ApplicationError{
-	"Internal server error",
-	500,
-}
+	ErrTaskNotFound = &ApplicationError{
+		Message: "Task not found",
+		Status:  404,
+	}
+
+	ErrInternalServerError = &ApplicationError{
+		Message: "Internal server error",
+		Status:  500,
+	}
+)

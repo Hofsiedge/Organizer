@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"github.com/Hofsiedge/Organizer/src/tasktracker"
 	"go.uber.org/zap"
 	"time"
@@ -40,11 +41,7 @@ func (mw LoggingMiddleware) ProcessMethodOutput(defaultMessage string, startTime
 	return
 }
 
-func (mw LoggingMiddleware) ChangeTaskStatus(id int64, status tasktracker.TaskStatus) error {
-	panic("implement me")
-}
-
-func (mw LoggingMiddleware) CreateTask(name, description string, ownerId int64) (taskId int64, err error) {
+func (mw LoggingMiddleware) CreateTask(ctx context.Context, name, description string, ownerId int64) (taskId int64, err error) {
 	defer func(begin time.Time) {
 		err = mw.ProcessMethodOutput("called method CreateTask", begin,
 			map[string]interface{}{
@@ -54,25 +51,43 @@ func (mw LoggingMiddleware) CreateTask(name, description string, ownerId int64) 
 			}, taskId, err)
 	}(time.Now())
 
-	taskId, err = mw.Next.CreateTask(name, description, ownerId)
+	taskId, err = mw.Next.CreateTask(ctx, name, description, ownerId)
 	return taskId, err
 }
 
-func (mw LoggingMiddleware) GetTask(id int64) (task *tasktracker.Task, err error) {
+func (mw LoggingMiddleware) GetTask(ctx context.Context, id int64) (task *tasktracker.Task, err error) {
 	defer func(begin time.Time) {
-		err = mw.ProcessMethodOutput("called GetTask", begin, map[string]interface{}{"id": id}, task, err)
+		err = mw.ProcessMethodOutput("called GetTask", begin, map[string]interface{}{
+			"id": id,
+		}, task, err)
 	}(time.Now())
 
-	task, err = mw.Next.GetTask(id)
+	task, err = mw.Next.GetTask(ctx, id)
 	return task, err
 }
 
-// TODO
-func (mw LoggingMiddleware) DeleteTask(id int64) (err error) {
+func (mw LoggingMiddleware) UpdateTask(ctx context.Context, taskId int64, name, description *string, status *tasktracker.TaskStatus, userId int64) (err error) {
 	defer func(begin time.Time) {
-		panic("not implemented")
+		err = mw.ProcessMethodOutput("called UpdateTask", begin, map[string]interface{}{
+			"taskId":      taskId,
+			"name":        name,
+			"description": description,
+			"status":      status,
+			"userId":      userId,
+		}, nil, err)
 	}(time.Now())
 
-	err = mw.Next.DeleteTask(id)
+	err = mw.Next.UpdateTask(ctx, taskId, name, description, status, userId)
+	return err
+}
+
+func (mw LoggingMiddleware) DeleteTask(ctx context.Context, id int64) (err error) {
+	defer func(begin time.Time) {
+		err = mw.ProcessMethodOutput("called DeleteTask", begin, map[string]interface{}{
+			"id": id,
+		}, nil, err)
+	}(time.Now())
+
+	err = mw.Next.DeleteTask(ctx, id)
 	return
 }

@@ -12,24 +12,25 @@ import (
 )
 
 type JSONResponse struct {
-	Payload interface{} `json:"payload"`
-	Error   error       `json:"error"`
+	Data  interface{} `json:"data"`
+	Error error       `json:"error"`
 }
 
 func EncodeJSONResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
 	if err, ok := response.(*tasktracker.ApplicationError); ok {
 		w.WriteHeader(err.StatusCode())
 		return json.NewEncoder(w).Encode(JSONResponse{
-			Payload: nil,
-			Error:   err,
+			Data:  nil,
+			Error: err,
 		})
 	}
 	return json.NewEncoder(w).Encode(JSONResponse{
-		Payload: response,
-		Error:   nil,
+		Data:  response,
+		Error: nil,
 	})
 }
 
+/* 						CreateTask							*/
 type createTaskRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -42,9 +43,9 @@ type createTaskResponse struct {
 }
 
 func MakeCreateTaskEndpoint(svc tasktracker.IService) endpoint.Endpoint {
-	return func(_ context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(createTaskRequest)
-		id, err := svc.CreateTask(req.Name, req.Description, req.OwnerId)
+		id, err := svc.CreateTask(ctx, req.Name, req.Description, req.OwnerId)
 		if err != nil {
 			return nil, err
 		}
@@ -55,11 +56,12 @@ func MakeCreateTaskEndpoint(svc tasktracker.IService) endpoint.Endpoint {
 func DecodeCreateTaskRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var request createTaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		return nil, err
+		return nil, tasktracker.ErrBadRequest
 	}
 	return request, nil
 }
 
+/* 							GetTask							*/
 type getTaskRequest struct {
 	Id int64 `json:"id"`
 }
@@ -69,9 +71,9 @@ type getTaskResponse struct {
 }
 
 func MakeGetTaskEndpoint(svc tasktracker.IService) endpoint.Endpoint {
-	return func(_ context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(getTaskRequest)
-		task, err := svc.GetTask(req.Id)
+		task, err := svc.GetTask(ctx, req.Id)
 		if err != nil {
 			if appErr, ok := err.(*tasktracker.ApplicationError); ok {
 				return appErr, nil
@@ -95,31 +97,72 @@ func DecodeGetTaskRequest(_ context.Context, r *http.Request) (interface{}, erro
 	return getTaskRequest{id}, nil
 }
 
+/* 							DeleteTask						*/
 type deleteTaskRequest struct {
 	Id int64 `json:"id"`
 }
 
-type deleteTaskResponse struct{}
-
 func MakeDeleteTaskEndpoint(svc tasktracker.IService) endpoint.Endpoint {
-	return func(_ context.Context, request interface{}) (interface{}, error) {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(deleteTaskRequest)
-		err := svc.DeleteTask(req.Id)
+		err := svc.DeleteTask(ctx, req.Id)
 		if err != nil {
 			return nil, err
 		}
-		return deleteTaskResponse{}, nil
+		return struct{}{}, nil
 	}
 }
 
 func DecodeDeleteTaskRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var request deleteTaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		return nil, err
+		return nil, tasktracker.ErrBadRequest
 	}
 	return request, nil
 }
 
-func DecodeChangeTaskStatusRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	panic("not implemented")
+/* 							UpdateTask						*/
+type updateTaskRequest struct {
+	Id          int64
+	Name        *string                 `json:"name,omitempty"`
+	Description *string                 `json:"description,omitempty"`
+	Status      *tasktracker.TaskStatus `json:"status,omitempty"`
+}
+
+func DecodeUpdateTaskRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	vars := mux.Vars(r)
+	strId, found := vars["id"]
+	if !found || strId == "" {
+		return nil, tasktracker.ErrBadRequest
+	}
+	var id int64
+	id, err := strconv.ParseInt(strId, 10, 64)
+	if err != nil {
+		return nil, tasktracker.ErrBadRequest
+	}
+
+	var request updateTaskRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, tasktracker.ErrBadRequest
+	}
+	request.Id = id
+	if request.Name == nil && request.Description == nil && request.Status == nil {
+		return nil, &tasktracker.ApplicationError{
+			Message: "Missing parameters: at least one of 'name', 'description', 'status' must be specified",
+			Status:  400,
+		}
+	}
+	return request, nil
+}
+
+func MakeUpdateTaskEndpoint(svc tasktracker.IService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(updateTaskRequest)
+		// TODO: obtain userId from JWT
+		err := svc.UpdateTask(ctx, req.Id, req.Name, req.Description, req.Status, 1)
+		if err != nil {
+			return nil, err
+		}
+		return struct{}{}, nil
+	}
 }

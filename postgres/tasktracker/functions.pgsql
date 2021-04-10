@@ -27,6 +27,41 @@ BEGIN
 END;
 $$;
 
+-- Update task
+CREATE OR REPLACE PROCEDURE tasktracker.update_task(
+    task_id         INT,
+    new_name        TEXT,
+    new_description TEXT,
+    new_status      tasktracker.task_status,
+    user_id         INT
+)
+    LANGUAGE plpgsql AS
+$$
+DECLARE
+    update_query TEXT;
+    updated      INT;
+BEGIN
+    update_query := 'WITH update_cte AS ('
+                        || 'UPDATE tasktracker.task SET '
+                        || concat_ws(
+                            ', ',
+                            CASE WHEN new_name IS NOT NULL THEN 'name = $1 ' END,
+                            CASE WHEN new_description IS NOT NULL THEN 'description = $2 ' END,
+                            CASE WHEN new_status IS NOT NULL THEN 'status = $3 ' END
+                        )
+                        || 'WHERE id = $4 AND owner_id = $5 '
+                        || 'RETURNING 1'
+        || ') SELECT count(*) FROM update_cte';
+
+    EXECUTE update_query USING new_name, new_description, new_status, task_id, user_id INTO updated;
+
+    IF updated = 0
+        THEN
+            RAISE EXCEPTION 'task not found';
+    END IF;
+END;
+$$;
+
 -- Delete a task
 CREATE OR REPLACE PROCEDURE tasktracker.delete_task(
     task_id INT
@@ -38,12 +73,10 @@ BEGIN
         FROM
             tasktracker.task
         WHERE
-            id = task_id;
+                id = task_id;
     IF NOT found
         THEN
-            RAISE EXCEPTION 'Task % not found', task_id;
+            RAISE EXCEPTION 'task not found';
     END IF;
 END;
 $$;
-
--- TODO
