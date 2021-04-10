@@ -27,6 +27,22 @@ BEGIN
 END;
 $$;
 
+-- Get tasks by user
+CREATE OR REPLACE FUNCTION tasktracker.get_tasks(
+    user_id INT
+) RETURNS TABLE (LIKE tasktracker.task)
+    LANGUAGE plpgsql AS
+$$
+BEGIN
+    RETURN QUERY
+        SELECT *
+            FROM
+                tasktracker.task t
+            WHERE
+                t.owner_id = user_id;
+END;
+$$;
+
 -- Update task
 CREATE OR REPLACE PROCEDURE tasktracker.update_task(
     task_id         INT,
@@ -73,7 +89,7 @@ BEGIN
         FROM
             tasktracker.task
         WHERE
-                id = task_id;
+            id = task_id;
     IF NOT found
         THEN
             RAISE EXCEPTION 'task not found';

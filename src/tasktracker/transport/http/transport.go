@@ -158,11 +158,44 @@ func DecodeUpdateTaskRequest(ctx context.Context, r *http.Request) (interface{},
 func MakeUpdateTaskEndpoint(svc tasktracker.IService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(updateTaskRequest)
-		// TODO: obtain userId from JWT
+		// TODO: obtain UserId from JWT
 		err := svc.UpdateTask(ctx, req.Id, req.Name, req.Description, req.Status, 1)
 		if err != nil {
 			return nil, err
 		}
 		return struct{}{}, nil
+	}
+}
+
+/* 							GetTasks						*/
+
+type getTasksRequest struct {
+	UserId int64
+}
+
+type getTasksResponse struct {
+	Number int
+	Tasks  []*tasktracker.Task
+}
+
+func DecodeGetTasksRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	// TODO: obtain UserId from JWT
+	request := getTasksRequest{
+		UserId: 1,
+	}
+	return request, nil
+}
+
+func MakeGetTasksEndpoint(svc tasktracker.IService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(getTasksRequest)
+		tasks, err := svc.GetTasks(ctx, req.UserId)
+		if err != nil {
+			return nil, err
+		}
+		return getTasksResponse{
+			Number: len(tasks),
+			Tasks:  tasks,
+		}, nil
 	}
 }

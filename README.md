@@ -81,27 +81,27 @@ PostgreSQL can be accessed from your system through `pgbouncer` connection poole
 
 
 ## Release v0.01
-[ ] Basic DB
-	[ ] Task tracker
-		[ ] Task (with dependencies)
-		[ ] Resource - basically, a proxy for images, documents, etc [ ] Environment
-		[ ] Event (just as a log for now)
-		[ ] Object
-[ ] Basic REST API
-	[ ] Task
-	[ ] Resource
-	[ ] Event
-	[ ] Object
-[ ] Basic CLI client
-	[ ] Task
-	[ ] Resource
-	[ ] Event
-	[ ] Object
-[ ] Basic Docker
-	[ ] PostgreSQL service
-	[ ] Go web app service
-	[ ] nginx service
-	[ ] docker-compose.yaml
-[ ] Testing
-	[ ] Go
-	[ ] PL/pgSQL
+- [ ] Basic DB
+	- [ ] Task tracker
+		- [x] Task (with dependencies)
+		- [ ] Resource - basically, a proxy for images, documents, etc [ ] Environment
+	- [ ] Event (just as a log for now)
+	- [ ] Object
+- [ ] Basic REST API
+	- [x] Task
+	- [ ] Resource
+	- [ ] Event
+	- [ ] Object
+- [ ] Basic CLI client
+	- [ ] Task
+	- [ ] Resource
+	- [ ] Event
+	- [ ] Object
+- [x] Basic Docker
+	- [x] PostgreSQL service
+	- [x] Go web app service
+	- [x] nginx service
+	- [x] docker-compose.yaml
+- [ ] Testing
+	- [ ] Go
+	- [ ] PL/pgSQL

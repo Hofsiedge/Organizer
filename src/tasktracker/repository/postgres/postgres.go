@@ -29,17 +29,17 @@ func (r TaskRepository) CreateTask(ctx context.Context, name string, description
 	return taskId, nil
 }
 
-func (r TaskRepository) GetTask(ctx context.Context, taskId int64) (task *tasktracker.Task, err error) {
+func (r TaskRepository) GetTask(ctx context.Context, taskId int64) (*tasktracker.Task, error) {
 	rows, err := r.Db.Query(
 		ctx,
-		"SELECT * from tasktracker.task WHERE id = $1;",
+		"SELECT * FROM tasktracker.task WHERE id = $1;",
 		taskId,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("Query failed in GetCharacter: %v\n", err)
 	}
 
-	task = new(tasktracker.Task)
+	task := new(tasktracker.Task)
 	if err := pgxscan.ScanOne(task, rows); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, tasktracker.ErrTaskNotFound
@@ -50,6 +50,22 @@ func (r TaskRepository) GetTask(ctx context.Context, taskId int64) (task *tasktr
 		return nil, errors.WithStack(err)
 	}
 	return task, nil
+}
+
+func (r TaskRepository) GetTasks(ctx context.Context, userId int64) ([]*tasktracker.Task, error) {
+	rows, err := r.Db.Query(
+		ctx,
+		"SELECT * FROM tasktracker.get_tasks($1);",
+		userId,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("query failed in GetTasks: %v", err)
+	}
+	var tasks []*tasktracker.Task
+	if err := pgxscan.ScanAll(&tasks, rows); err != nil {
+		return nil, fmt.Errorf("query failed in GetTasks: %v", err)
+	}
+	return tasks, nil
 }
 
 func (r TaskRepository) UpdateTask(ctx context.Context, taskId int64, name, description *string, status *tasktracker.TaskStatus, userId int64) error {

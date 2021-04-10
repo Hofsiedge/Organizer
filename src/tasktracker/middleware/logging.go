@@ -66,6 +66,15 @@ func (mw LoggingMiddleware) GetTask(ctx context.Context, id int64) (task *tasktr
 	return task, err
 }
 
+func (mw LoggingMiddleware) GetTasks(ctx context.Context, userId int64) (tasks []*tasktracker.Task, err error) {
+	defer func(begin time.Time) {
+		err = mw.ProcessMethodOutput("called GetTasks", begin, nil, tasks, err)
+	}(time.Now())
+
+	tasks, err = mw.Next.GetTasks(ctx, userId)
+	return tasks, err
+}
+
 func (mw LoggingMiddleware) UpdateTask(ctx context.Context, taskId int64, name, description *string, status *tasktracker.TaskStatus, userId int64) (err error) {
 	defer func(begin time.Time) {
 		err = mw.ProcessMethodOutput("called UpdateTask", begin, map[string]interface{}{
